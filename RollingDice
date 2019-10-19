@@ -1,0 +1,107 @@
+
+import gpdraw.*;
+import java.util.*;
+public class Runner{
+
+    public static void main(String[] args){
+        System.out.println(Arrays.toString(makeDist(1000000,3)));
+    }
+
+    public static int roll()
+    {
+        return (int) (Math.random() * 6) + 1;
+    } 
+
+    public static int roll2()
+    {
+        return roll() + roll();
+    }
+
+    public static int rollN(int numDice)
+    {
+        int sum = 0;
+        for(int i = 0; i < numDice; i++)
+        {
+            sum += roll();
+        }      
+        return sum;
+    }
+
+    public static double[] makePercent(int numTimes)
+    {
+        double[] ret = new double[11];
+        for(int n = 0; n < numTimes; n++)
+        {
+            int rand = roll2();
+            ret[rand - 2]++;
+        }
+        for(int i = 0; i < ret.length; i++)
+        {
+            ret[i] = ret[i]/numTimes * 100;   //ret[i] = ret[i] / numTimes;
+        }
+
+        return ret;
+    }
+
+    public static double[] makeDist(int numTimes, int numDice)
+    {
+        double[] dist = new double[numDice * 6 - numDice + 1];
+        for(int n = 0; n < numTimes; n++)
+        {
+            int rand = rollN(numDice);
+            dist[rand - numDice]++;
+        }
+        for(int i = 0; i < dist.length; i++)
+        {
+            dist[i] = dist[i]/ numTimes * 100;
+        }
+        return dist;
+    }
+
+    
+    public static void makeSD(int numTimes, int numDice)
+    {
+        double[] dist = new double[numDice * 6 - numDice + 1];
+        for(int n = 0; n < numTimes; n++)
+        {
+            int rand = rollN(numDice);
+            dist[rand - numDice]++;
+        }
+        for(int i = 0; i < dist.length; i++)
+        {
+            dist[i] = dist[i]/ numTimes;
+        }
+        //System.out.println(Arrays.toString(dist));
+        System.out.println("numDice = " + numDice + "  SD = " + standardDeviation(dist));
+
+    }
+    public static double standardDeviation(double[] nums)
+    {
+        double sum = 0;
+        for(int i = 0; i < nums.length; i++)
+        {
+            sum += nums[i];
+        }
+        double mean = sum / nums.length;
+
+        for(int i = 0; i < nums.length; i++)
+        {
+            nums[i] = (mean - nums[i]) * (mean - nums[i]); 
+        }
+
+        sum = 0;
+        for(int i = 0; i < nums.length; i++)
+        {
+            sum += nums[i];
+        }
+
+        return Math.sqrt(sum/nums.length);
+    }
+
+    
+    
+    
+    
+    
+    
+}
