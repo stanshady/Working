@@ -1,0 +1,104 @@
+package v1;
+
+import javafx.geometry.Pos;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+
+
+public class LocalBoard extends Pane {
+
+    private final int TILE_WIDTH;
+    private final int TILE_HEIGHT;
+    private Tile[][] tiles = new Tile[3][3];
+
+    private Rectangle border;
+
+    LocalBoard(int TILE_WIDTH, int TILE_HEIGHT){
+        this.TILE_WIDTH = TILE_WIDTH;
+        this.TILE_HEIGHT = TILE_HEIGHT;
+
+       for(int row = 0; row < 3; row++){
+           for(int col = 0; col < 3; col++){
+               Tile tile = new Tile();
+               tile.setTranslateX(row * TILE_WIDTH);
+               tile.setTranslateY(col * TILE_HEIGHT);
+
+               tiles[row][col] = tile;
+
+               getChildren().addAll(tile);
+           }
+       }
+        /*
+        The LocalBoard's actual width is 3*TILE_WIDTH
+        (same with height) since it is a 3x3 grid of tiles.
+         */
+        int WIDTH = 3 * TILE_WIDTH;
+        int HEIGHT = 3 * TILE_HEIGHT;
+
+        border = new Rectangle(getTranslateX(),getTranslateY(),WIDTH,HEIGHT);
+        border.setFill(null);
+
+        //draw # pattern
+        Line hor0 = new Line(getTranslateX() + 0.15*WIDTH ,
+                getTranslateY() + 0.35*HEIGHT,
+                getTranslateX() + 0.85*WIDTH, getTranslateY() + 0.35*HEIGHT);
+        Line hor1 = new Line(getTranslateX() + 0.15*WIDTH ,
+                getTranslateY() + 0.65*HEIGHT,
+                getTranslateX() + 0.85*WIDTH, getTranslateY() + 0.65*HEIGHT);
+        Line ver0 = new Line(getTranslateX() + 0.35*WIDTH ,
+                getTranslateY() + 0.15*HEIGHT,
+                getTranslateX() + 0.35*WIDTH, getTranslateY() + 0.85*HEIGHT);
+        Line ver1 = new Line(getTranslateX() + 0.65*WIDTH ,
+                getTranslateY() + 0.15*HEIGHT,
+                getTranslateX() + 0.65*WIDTH, getTranslateY() + 0.85*HEIGHT);
+
+        getChildren().addAll(hor0, hor1, ver0, ver1, border);
+
+        setOnMouseClicked(event -> {
+            if(event.getButton() == MouseButton.SECONDARY){
+                if(border.getStroke() == null)
+                    border.setStroke(Color.BLACK);
+                else
+                    border.setStroke(null);
+            }
+        });
+    }
+
+    public Rectangle border(){
+        return border;
+    }
+
+    private class Tile extends StackPane {
+
+        private Text text = new Text();
+
+        public Tile() {
+            setPrefSize(TILE_WIDTH,TILE_HEIGHT);
+            text.setFont(Font.font(0.75 * TILE_HEIGHT));
+
+            text.setText("O");
+            text.setFill(Color.BLUE);
+
+            setAlignment(Pos.CENTER);  //just safe to do i guess...
+
+            getChildren().addAll(text);
+
+            setOnMouseClicked(event -> {
+                if(event.getButton() == MouseButton.PRIMARY){
+                    if(text.getText().equals("X")){
+                        text.setText("O");
+                    }
+                    else
+                        text.setText("X");
+                }
+            });
+        }
+    }
+}
