@@ -5,37 +5,67 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-
+import java.util.ArrayList;
 
 public class LocalBoard extends Pane {
 
+    //private final int fontSize = something scaled to the TILE_SIZE
     private final int TILE_WIDTH;
     private final int TILE_HEIGHT;
-    private Tile[][] tiles = new Tile[3][3];
-
-
+    private final ArrayList<TileCombo> TILE_COMBOS = new ArrayList<>();
+    private Tile[][] localBoard = new Tile[3][3];
+    private boolean localPlayable;
+    private int countTurns;
     private Rectangle border;
+    private Ellipse ellipse; //for "O"
 
-    LocalBoard(int TILE_WIDTH, int TILE_HEIGHT){
+    //for the "X"... sigh
+    private Line down;
+    private Line up;
+
+    LocalBoard(int TILE_WIDTH, int TILE_HEIGHT) {
         this.TILE_WIDTH = TILE_WIDTH;
         this.TILE_HEIGHT = TILE_HEIGHT;
+        localPlayable = true;
+        countTurns = 0;
 
-        for(int row = 0; row < 3; row++){
-            for(int col = 0; col < 3; col++){
-                Tile tile = new Tile();
+        //should I set prefSize? what difference?
+
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                Tile tile = new Tile(row, col);
                 tile.setTranslateX(row * TILE_WIDTH);
                 tile.setTranslateY(col * TILE_HEIGHT);
 
-                tiles[row][col] = tile;
+                localBoard[row][col] = tile;
 
                 getChildren().addAll(tile);
             }
         }
+
+        //add all the TILE_COMBOS
+        for (int row = 0; row < 3; row++) {
+            TILE_COMBOS.add(new TileCombo(localBoard[row][0],
+                    localBoard[row][1],
+                    localBoard[row][2]));
+        }
+        for (int col = 0; col < 3; col++) {
+            TILE_COMBOS.add(new TileCombo(localBoard[0][col],
+                    localBoard[1][col],
+                    localBoard[2][col]));
+        }
+        TILE_COMBOS.add(new TileCombo(localBoard[0][0],
+                localBoard[1][1],
+                localBoard[2][2]));
+        TILE_COMBOS.add(new TileCombo(localBoard[0][2],
+                localBoard[1][1],
+                localBoard[2][0]));
+
         /*
         The LocalBoard's actual width is 3*TILE_WIDTH
         (same with height) since it is a 3x3 grid of tiles.
@@ -43,93 +73,184 @@ public class LocalBoard extends Pane {
         int WIDTH = 3 * TILE_WIDTH;
         int HEIGHT = 3 * TILE_HEIGHT;
 
-        border = new Rectangle(getTranslateX(),getTranslateY(),WIDTH,HEIGHT);
+        border = new Rectangle(getTranslateX() + 0.05 * WIDTH, getTranslateY() + 0.05 * HEIGHT, WIDTH * .9, HEIGHT * .9);
         border.setFill(null);
+        border.setStroke(Color.BLACK);
 
         //draw # pattern
-        Line hor0 = new Line(getTranslateX() + 0.15*WIDTH ,
-                getTranslateY() + 0.35*HEIGHT,
-                getTranslateX() + 0.85*WIDTH, getTranslateY() + 0.35*HEIGHT);
-        Line hor1 = new Line(getTranslateX() + 0.15*WIDTH ,
-                getTranslateY() + 0.65*HEIGHT,
-                getTranslateX() + 0.85*WIDTH, getTranslateY() + 0.65*HEIGHT);
-        Line ver0 = new Line(getTranslateX() + 0.35*WIDTH ,
-                getTranslateY() + 0.15*HEIGHT,
-                getTranslateX() + 0.35*WIDTH, getTranslateY() + 0.85*HEIGHT);
-        Line ver1 = new Line(getTranslateX() + 0.65*WIDTH ,
-                getTranslateY() + 0.15*HEIGHT,
-                getTranslateX() + 0.65*WIDTH, getTranslateY() + 0.85*HEIGHT);
+        Line hor0 = new Line(getTranslateX() + 0.15 * WIDTH,
+                getTranslateY() + 0.35 * HEIGHT,
+                getTranslateX() + 0.85 * WIDTH,
+                getTranslateY() + 0.35 * HEIGHT);
+        Line hor1 = new Line(getTranslateX() + 0.15 * WIDTH,
+                getTranslateY() + 0.65 * HEIGHT,
+                getTranslateX() + 0.85 * WIDTH,
+                getTranslateY() + 0.65 * HEIGHT);
+        Line ver0 = new Line(getTranslateX() + 0.35 * WIDTH,
+                getTranslateY() + 0.15 * HEIGHT,
+                getTranslateX() + 0.35 * WIDTH,
+                getTranslateY() + 0.85 * HEIGHT);
+        Line ver1 = new Line(getTranslateX() + 0.65 * WIDTH,
+                getTranslateY() + 0.15 * HEIGHT,
+                getTranslateX() + 0.65 * WIDTH,
+                getTranslateY() + 0.85 * HEIGHT);
 
-        getChildren().addAll(hor0, hor1, ver0, ver1, border);
+        //LocalBoard "O" pattern
+        ellipse = new Ellipse(getTranslateX() + WIDTH * 0.5,
+                getTranslateY() + HEIGHT * 0.5,
+                WIDTH * 0.4,
+                HEIGHT * 0.45);
+        ellipse.setFill(null);
+        ellipse.setStrokeWidth(10);
+        ellipse.setStroke(null);
 
-        setOnMouseClicked(event -> {
-            if(event.getButton() == MouseButton.SECONDARY){
-                if(border.getStroke() == null)
-                    border.setStroke(Color.BLACK);
-                else
-                    border.setStroke(null);
-            }
-        });
+        //LocalBoard "X" pattern
+        down = new Line(getTranslateX() + 0.15 * WIDTH,
+                getTranslateY() + 0.15 * HEIGHT,
+                getTranslateX() + 0.85 * WIDTH,
+                getTranslateY() + 0.85 * HEIGHT);
+        down.setStrokeWidth(10);
+        down.setStroke(null);
+        up = new Line(getTranslateX() + 0.15 * WIDTH,
+                getTranslateY() + 0.85 * HEIGHT,
+                getTranslateX() + 0.85 * WIDTH,
+                getTranslateY() + 0.15 * HEIGHT);
+        up.setStrokeWidth(10);
+        up.setStroke(null);
+
+        getChildren().addAll(hor0, hor1, ver0, ver1, border, ellipse, down, up);
     }
 
-    public Rectangle border(){
+
+    private void update() {
+        for (TileCombo tileCombo : TILE_COMBOS) {
+            if (tileCombo.isComplete()) {
+                localPlayable = false;
+
+                //getXTurn is backwards since update is called
+                //after the variable gets updated
+                if (MainBoard.getXTurn()) {
+                    ellipse.setStroke(Color.BLUE);
+
+                } else {
+                    down.setStroke(Color.DARKRED);
+                    up.setStroke(Color.DARKRED);
+                }
+                /*future:  cause a dimming of everything
+                 but the X or O on the LocalBoard Pane?
+                 OR: Have a white Rectangle cover layer animate a
+                 change in opacity 0 -> 0.5?
+                 */
+            }
+        }
+
+        if (countTurns >= 9) {
+            localPlayable = false;
+        }
+    }
+
+    public boolean isEmpty() {
+        return getText() == null;
+    }
+
+    public String getText() {
+        if (down.getStroke() != null)
+            return "X";
+        else if (ellipse.getStroke() != null)
+            return "O";
+        return null;
+    }
+
+    public boolean isLocalPlayable() {
+        return localPlayable;
+    }
+
+    //getter
+    public Rectangle border() {
         return border;
     }
 
+    private class TileCombo {
+        private Tile[] tiles;
+
+        TileCombo(Tile... tiles) {
+            this.tiles = tiles;
+        }
+
+        public boolean isComplete() {
+            if (tiles[0].isEmpty())
+                return false;
+
+            return tiles[0].getText().equals(tiles[1].getText())
+                    && tiles[1].getText().equals(tiles[2].getText());
+        }
+    }
+
+
+    //Tiles for small X's and 0's
     private class Tile extends StackPane {
 
         private Text text = new Text();
+        private int row;
+        private int col;
 
-        public Tile() {
-            setPrefSize(TILE_WIDTH,TILE_HEIGHT);
+        public Tile(int row, int col) {
+            setPrefSize(TILE_WIDTH, TILE_HEIGHT);
+
+            this.row = row;
+            this.col = col;
+
             text.setFont(Font.font(0.75 * TILE_HEIGHT));
-
             text.setText("");
-            text.setFill(Color.BLUE);
 
-            setAlignment(Pos.CENTER);  //just safe to do i guess...
-
+            setAlignment(Pos.CENTER);  //default anyway?
             getChildren().addAll(text);
 
             setOnMouseClicked(event -> {
-                if(event.getButton() == MouseButton.PRIMARY){
-                    if(isEmpty()){
-                        if(MainBoard.getXTurn()) {
-                            drawX();
-                            MainBoard.setXTurn(false);
-                        }
-                        else{
-                            drawO();
-                            MainBoard.setXTurn(true);
-                        }
-                    }
-                    else{
-                        if(MainBoard.getXTurn()) {
-                            drawX();
-                            MainBoard.setXTurn(false);
-                        }
-                        else{
-                            drawO();
-                            MainBoard.setXTurn(true);
-                        }
+                if (event.getButton() == MouseButton.PRIMARY) {
+
+                    if (!isEmpty() || !localPlayable || !MainBoard.getPlayable() || border().getStroke() == null)
+                        return;
+
+                    if (MainBoard.getXTurn()) {
+                        drawX();
+                        MainBoard.setXTurn(false);
+                    } else {
+                        drawO();
+                        MainBoard.setXTurn(true);
                     }
 
+                    MainBoard.setLastClicked(this.row, this.col);
+                    countTurns++;
+                    update();
+                    MainBoard.update();
                 }
             });
-
         }
 
-        public void drawX(){
-            text.setFill(Color.RED);
+        private void drawX() {
+            text.setFill(Color.FIREBRICK);
             text.setText("X");
         }
 
-        public void drawO(){
-            text.setFill(Color.BLUE);
+        private void drawO() {
+            text.setFill(Color.DARKSLATEBLUE);
             text.setText("O");
         }
 
-        public boolean isEmpty(){
+        public int getRow() {
+            return row;
+        }
+
+        public int getCol() {
+            return col;
+        }
+
+        public String getText() {
+            return text.getText();
+        }
+
+        private boolean isEmpty() {
             return text.getText().equals("");
         }
     }
