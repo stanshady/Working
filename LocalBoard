@@ -18,23 +18,24 @@ public class LocalBoard extends Pane {
     private final int TILE_HEIGHT;
     private Tile[][] tiles = new Tile[3][3];
 
+
     private Rectangle border;
 
     LocalBoard(int TILE_WIDTH, int TILE_HEIGHT){
         this.TILE_WIDTH = TILE_WIDTH;
         this.TILE_HEIGHT = TILE_HEIGHT;
 
-       for(int row = 0; row < 3; row++){
-           for(int col = 0; col < 3; col++){
-               Tile tile = new Tile();
-               tile.setTranslateX(row * TILE_WIDTH);
-               tile.setTranslateY(col * TILE_HEIGHT);
+        for(int row = 0; row < 3; row++){
+            for(int col = 0; col < 3; col++){
+                Tile tile = new Tile();
+                tile.setTranslateX(row * TILE_WIDTH);
+                tile.setTranslateY(col * TILE_HEIGHT);
 
-               tiles[row][col] = tile;
+                tiles[row][col] = tile;
 
-               getChildren().addAll(tile);
-           }
-       }
+                getChildren().addAll(tile);
+            }
+        }
         /*
         The LocalBoard's actual width is 3*TILE_WIDTH
         (same with height) since it is a 3x3 grid of tiles.
@@ -83,7 +84,7 @@ public class LocalBoard extends Pane {
             setPrefSize(TILE_WIDTH,TILE_HEIGHT);
             text.setFont(Font.font(0.75 * TILE_HEIGHT));
 
-            text.setText("O");
+            text.setText("");
             text.setFill(Color.BLUE);
 
             setAlignment(Pos.CENTER);  //just safe to do i guess...
@@ -92,13 +93,44 @@ public class LocalBoard extends Pane {
 
             setOnMouseClicked(event -> {
                 if(event.getButton() == MouseButton.PRIMARY){
-                    if(text.getText().equals("X")){
-                        text.setText("O");
+                    if(isEmpty()){
+                        if(MainBoard.getXTurn()) {
+                            drawX();
+                            MainBoard.setXTurn(false);
+                        }
+                        else{
+                            drawO();
+                            MainBoard.setXTurn(true);
+                        }
                     }
-                    else
-                        text.setText("X");
+                    else{
+                        if(MainBoard.getXTurn()) {
+                            drawX();
+                            MainBoard.setXTurn(false);
+                        }
+                        else{
+                            drawO();
+                            MainBoard.setXTurn(true);
+                        }
+                    }
+
                 }
             });
+
+        }
+
+        public void drawX(){
+            text.setFill(Color.RED);
+            text.setText("X");
+        }
+
+        public void drawO(){
+            text.setFill(Color.BLUE);
+            text.setText("O");
+        }
+
+        public boolean isEmpty(){
+            return text.getText().equals("");
         }
     }
 }
