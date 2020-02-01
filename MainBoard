@@ -8,9 +8,9 @@ import javafx.stage.Stage;
 
 public class MainBoard extends Application {
 
-    private final int  TILE_WIDTH = 100;
-    private final int  TILE_HEIGHT = 100;
-
+    private final int  TILE_WIDTH = 75;
+    private final int  TILE_HEIGHT = 75;
+    private static boolean xTurn = true;
 
     private Parent createContent(){
         Pane root = new Pane();
@@ -26,6 +26,14 @@ public class MainBoard extends Application {
             }
         }
         return root;
+    }
+
+    public static boolean getXTurn(){
+        return xTurn;
+    }
+
+    public static void setXTurn(boolean b){
+        xTurn = b;
     }
 
     public void start(Stage primaryStage){
