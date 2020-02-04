@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 
 public class JavaFXApp extends Application {
 
-    Group root;
+    private Group root;
 
     private Parent initRoot(){
         root = new Group();
