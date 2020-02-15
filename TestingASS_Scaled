@@ -30,25 +30,25 @@ public class TestingASS_Scaled extends Application {
 
         //ASS inputs
         angle = 55.0;
-        sideLen = 300.0;
-        swingLen = 250.0;
+        sideLen = 350.0;
+        swingLen = 300.0;
 
         //time to calculate shit.
         //probably make own class for this later.
         double yMin, yMax, xMin, xMax, yWidth, xWidth, scaleFactor;
-        double angleRad = angle*Math.PI/180;
+        double angleRad = angle * Math.PI / 180;
 
-        yMin = Math.min(0, sideLen*Math.sin(angleRad)-swingLen);
+        yMin = Math.min(0, sideLen * Math.sin(angleRad) - swingLen);
         yMax = sideLen * Math.sin(angleRad) + swingLen;
         yWidth = yMax - yMin;
 
-        xMin = Math.min(0, sideLen * Math.cos(angleRad)-swingLen);
-        xMax = Math.max(0,sideLen*Math.cos(angleRad)+swingLen);
+        xMin = Math.min(0, sideLen * Math.cos(angleRad) - swingLen);
+        xMax = Math.max(0, sideLen * Math.cos(angleRad) + swingLen);
         xWidth = xMax - xMin;
 
         System.out.println(xWidth + " " + yWidth);
 
-        scaleFactor = 720/Math.max(xWidth,yWidth);
+        scaleFactor = 720 / Math.max(xWidth, yWidth);
 
         //old way
         //base = new Line(100, 600, 950, 600);
@@ -56,17 +56,15 @@ public class TestingASS_Scaled extends Application {
         //try to figure out how to properly place base in
         //special case of always acute
         base = new Line();
-        if(xMin == 0){
+        if (xMin == 0) {
             base.setStartX(50);
-        }
-        else
-            base.setStartX(-1*xMin*scaleFactor + 50);
+        } else
+            base.setStartX(-1 * xMin * scaleFactor + 50);
 
-        if(yMin == 0){
+        if (yMin == 0) {
             base.setStartY(750);
-        }
-        else
-            base.setStartY(750 + yMin*scaleFactor);
+        } else
+            base.setStartY(750 + yMin * scaleFactor);
         //System.out.println(yMin + " " +scaleFactor);
 
         base.setEndX(1000);
@@ -75,18 +73,18 @@ public class TestingASS_Scaled extends Application {
 
         side = new Line(base.getStartX(),
                 base.getStartY(),
-                base.getStartX() + sideLen*scaleFactor * Math.cos(angleRad),
-                base.getStartY() - sideLen*scaleFactor * Math.sin(angleRad));
+                base.getStartX() + sideLen * scaleFactor * Math.cos(angleRad),
+                base.getStartY() - sideLen * scaleFactor * Math.sin(angleRad));
 
         swing = new Line(side.getEndX(),
                 side.getEndY(),
-                side.getEndX() + swingLen*scaleFactor,
+                side.getEndX() + swingLen * scaleFactor,
                 side.getEndY());
 
         System.out.println("side: " + side + "\n" + "swing: " + swing);
 
         double deltaY = swing.getStartY() - base.getStartY();
-        double deltaX = Math.sqrt(swingLen*scaleFactor * swingLen*scaleFactor - deltaY * deltaY);
+        double deltaX = Math.sqrt(swingLen * scaleFactor * swingLen * scaleFactor - deltaY * deltaY);
         longGreen = new Line(base.getStartX(),
                 base.getStartY(),
                 swing.getStartX() + deltaX,
@@ -100,7 +98,7 @@ public class TestingASS_Scaled extends Application {
         double angleRadian = angle * Math.PI / 180;
         double acuteOppositeSide = Math.asin(Math.sin(angleRadian) * sideLen / swingLen);
         double obtuseOppositeSide = Math.PI - acuteOppositeSide;
-        double shortGreenXDelta = Math.sin(Math.PI - angleRadian - obtuseOppositeSide) * sideLen*scaleFactor / Math.sin(obtuseOppositeSide);
+        double shortGreenXDelta = Math.sin(Math.PI - angleRadian - obtuseOppositeSide) * sideLen * scaleFactor / Math.sin(obtuseOppositeSide);
 
 
         shortGreen = new Line(base.getStartX(),
@@ -131,6 +129,8 @@ public class TestingASS_Scaled extends Application {
         shortSwingRectangle.setOpacity(0);
 
         shortSwingRectangle.setOnMouseDragEntered(event -> {
+            if (shortGreen.getEndX() < base.getStartX())
+                return;
             shortGreen.setOpacity(1);
             base.setOpacity(0);
             circle.setCenterX(shortGreen.getEndX());
@@ -139,6 +139,8 @@ public class TestingASS_Scaled extends Application {
         });
 
         shortSwingRectangle.setOnMouseDragOver(event -> {
+            if (shortGreen.getEndX() < base.getStartX())
+                return;
             circle.setCenterX(shortGreen.getEndX());
             circle.setCenterY(shortGreen.getEndY());
 
@@ -175,6 +177,8 @@ public class TestingASS_Scaled extends Application {
         rectangle.setOpacity(0);
 
         rectangle.setOnMouseDragEntered(event -> {
+            if (longGreen.getEndX() < base.getStartX())
+                return;
             longGreen.setOpacity(1);
             base.setOpacity(0);
             circle.setCenterX(longGreen.getEndX());
@@ -182,6 +186,8 @@ public class TestingASS_Scaled extends Application {
         });
 
         rectangle.setOnMouseDragOver(event -> {
+            if (longGreen.getEndX() < base.getStartX())
+                return;
             circle.setCenterX(longGreen.getEndX());
             circle.setCenterY(longGreen.getEndY());
 
@@ -240,8 +246,8 @@ public class TestingASS_Scaled extends Application {
             double yDiff = event.getSceneY() - swing.getStartY();
             double hypotenuse = Math.sqrt(yDiff * yDiff + xDiff * xDiff);
 
-            circle.setCenterX(swing.getStartX() + swingLen*scaleFactor * xDiff / hypotenuse);
-            circle.setCenterY(swing.getStartY() + swingLen*scaleFactor * yDiff / hypotenuse);
+            circle.setCenterX(swing.getStartX() + swingLen * scaleFactor * xDiff / hypotenuse);
+            circle.setCenterY(swing.getStartY() + swingLen * scaleFactor * yDiff / hypotenuse);
         });
 
         circle.setOnMouseEntered(event -> {
@@ -284,6 +290,8 @@ public class TestingASS_Scaled extends Application {
 
         //check longGreen intersection
         if (intersectLong.getBoundsInLocal().getWidth() != -1) {
+            if (longGreen.getEndX() < base.getStartX())
+                return;
             circle.setCenterX(longGreen.getEndX());
             circle.setCenterY(longGreen.getEndY());
             longGreen.setOpacity(1);
@@ -292,6 +300,8 @@ public class TestingASS_Scaled extends Application {
 
         //check shortGreen intersection
         else if (intersectShort.getBoundsInLocal().getWidth() != -1) {
+            if (shortGreen.getEndX() < base.getStartX())
+                return;
             circle.setCenterX(shortGreen.getEndX());
             circle.setCenterY(shortGreen.getEndY());
             shortGreen.setOpacity(1);
