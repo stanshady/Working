@@ -1,12 +1,8 @@
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.effect.Light;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -15,6 +11,7 @@ import javafx.scene.shape.Shape;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
+//Ready for first cleanup
 public class TestingASS extends Application {
 
     private Pane root;
@@ -22,19 +19,13 @@ public class TestingASS extends Application {
     private double sideLen, swingLen;
 
     private Line base, side, swing, shortGreen, longGreen;
-    private Circle circle, longEndPoint,shortEndPoint;
-    private Rectangle rectangle;
+    private Circle circle, longEndPoint, shortEndPoint;
+    private Rectangle rectangle, shortSwingRectangle;
     private double angle, rectangleAngle;
 
-    //test
     private boolean dragOn;
 
-
-
-
     private Parent setUpScene() {
-
-        //test
         dragOn = false;
 
         root = new Pane();
@@ -43,23 +34,19 @@ public class TestingASS extends Application {
         base = new Line(100, 600, 950, 600);
 
         //ASS inputs
-        angle = 40;
+        angle = 50;
         sideLen = 400;
         swingLen = 320;
 
         side = new Line(base.getStartX(),
                 base.getStartY(),
-                base.getStartX() + sideLen*Math.cos(angle*Math.PI/180),
-                base.getStartY() - sideLen*Math.sin(angle*Math.PI/180));
-
-
+                base.getStartX() + sideLen * Math.cos(angle * Math.PI / 180),
+                base.getStartY() - sideLen * Math.sin(angle * Math.PI / 180));
 
         swing = new Line(side.getEndX(),
                 side.getEndY(),
-                side.getEndX()+swingLen,
+                side.getEndX() + swingLen,
                 side.getEndY());
-
-
 
         double deltaY = swing.getStartY() - base.getStartY();
         double deltaX = Math.sqrt(swingLen * swingLen - deltaY * deltaY);
@@ -70,33 +57,84 @@ public class TestingASS extends Application {
 
         longGreen.setStroke(Color.GREEN);
         longGreen.setOpacity(0);
-        longGreen.setStrokeWidth(7);
+        longGreen.setStrokeWidth(5);
+
+        //Law of sines and such to find values
+        double angleRadian = angle * Math.PI / 180;
+        double acuteOppositeSide = Math.asin(Math.sin(angleRadian) * sideLen / swingLen);
+        double obtuseOppositeSide = Math.PI - acuteOppositeSide;
+        double shortGreenXDelta = Math.sin(Math.PI - angleRadian - obtuseOppositeSide) * sideLen / Math.sin(obtuseOppositeSide);
 
 
+        shortGreen = new Line(base.getStartX(),
+                base.getStartY(),
+                base.getStartX() + shortGreenXDelta,
+                base.getStartY());
 
+        shortGreen.setStroke(Color.GREEN);
+        shortGreen.setStrokeWidth(5);
+        shortGreen.setOpacity(0);
 
+        //shortSwingRectangle is a linear extension of swing.
+        // Used for the shortGreen intersection hold feeling.
+        shortSwingRectangle = new Rectangle(swing.getStartX(), swing.getStartY(), 2000, 30);
+        double angleRotateShortRectangle = obtuseOppositeSide;
+
+        double angleNormalShort = angleRotateShortRectangle + Math.PI * 0.5;
+
+        //readjust along the perpendicular
+        //had to use setLayoutX/Y.  setX() and setY() had
+        //funny behavior.
+        shortSwingRectangle.setLayoutX(-1 * shortSwingRectangle.getHeight() * 0.5 * Math.cos(angleNormalShort));
+        shortSwingRectangle.setLayoutY(-1 * shortSwingRectangle.getHeight() * 0.5 * Math.sin(angleNormalShort));
+
+        Rotate rotateShort = new Rotate(angleRotateShortRectangle * 180 / Math.PI, swing.getStartX(), swing.getStartY());
+        shortSwingRectangle.getTransforms().addAll(rotateShort);
+
+        shortSwingRectangle.setOpacity(0);
+
+        shortSwingRectangle.setOnMouseDragEntered(event -> {
+            shortGreen.setOpacity(1);
+            base.setOpacity(0);
+            circle.setCenterX(shortGreen.getEndX());
+            circle.setCenterY(shortGreen.getEndY());
+
+        });
+
+        shortSwingRectangle.setOnMouseDragOver(event -> {
+            circle.setCenterX(shortGreen.getEndX());
+            circle.setCenterY(shortGreen.getEndY());
+
+        });
+
+        shortSwingRectangle.setOnMouseDragExited(event -> {
+            shortGreen.setOpacity(0);
+            base.setOpacity(1);
+
+            if (dragOn)
+                event.consume();
+                //testing
+            else
+                checkIntersection();
+        });
+
+        //rectangle is a linear extension of swing.
+        // Used for the longGreen intersection hold feeling.
         rectangle = new Rectangle(swing.getStartX(), swing.getStartY(), 2000, 30);
 
-        rectangleAngle = -1*Math.atan((longGreen.getEndY() - swing.getStartY()) / (longGreen.getEndX() - swing.getStartX()));
+        rectangleAngle = -1 * Math.atan((longGreen.getEndY() - swing.getStartY()) / (longGreen.getEndX() - swing.getStartX()));
 
-
-        System.out.println(rectangleAngle);
+        //System.out.println(rectangleAngle);
         double normalAngle = rectangleAngle + Math.PI * 0.5;
 
         //readjust along the perpendicular
         //had to use setLayoutX/Y.  setX() and setY() had
         //funny behavior.
         rectangle.setLayoutX(rectangle.getHeight() * 0.5 * Math.cos(normalAngle));
-        System.out.println(swing.getStartX() + " " + rectangle.getHeight() * 0.5 * Math.cos(normalAngle));
-        rectangle.setLayoutY(-1*rectangle.getHeight() * 0.5 * Math.sin(normalAngle));
+        rectangle.setLayoutY(-1 * rectangle.getHeight() * 0.5 * Math.sin(normalAngle));
 
-        Rotate rotate = new Rotate(-1*rectangleAngle * 180 / Math.PI, swing.getStartX(), swing.getStartY());
+        Rotate rotate = new Rotate(-1 * rectangleAngle * 180 / Math.PI, swing.getStartX(), swing.getStartY());
         rectangle.getTransforms().addAll(rotate);
-
-
-        System.out.println(normalAngle);
-
-        System.out.println("Height = " + rectangle.getHeight());
 
         rectangle.setOpacity(0);
 
@@ -105,7 +143,6 @@ public class TestingASS extends Application {
             base.setOpacity(0);
             circle.setCenterX(longGreen.getEndX());
             circle.setCenterY(longGreen.getEndY());
-
         });
 
         rectangle.setOnMouseDragOver(event -> {
@@ -114,14 +151,13 @@ public class TestingASS extends Application {
 
         });
 
-
         rectangle.setOnMouseDragExited(event -> {
             longGreen.setOpacity(0);
             base.setOpacity(1);
 
-            if(dragOn)
+            if (dragOn)
                 event.consume();
-            //testing
+                //testing
             else
                 checkIntersection();
         });
@@ -133,7 +169,6 @@ public class TestingASS extends Application {
 
         swing.setStroke(Color.RED);
         side.setStroke(Color.BLUE);
-
 
         longEndPoint = new Circle(longGreen.getEndX(), longGreen.getEndY(), 1);
 
@@ -162,22 +197,17 @@ public class TestingASS extends Application {
 
             //Call to checkIntersection seems to do nothing...
             checkIntersection();
-
         });
 
 
         circle.setOnMouseDragged(event -> {
-
             double xDiff = event.getSceneX() - swing.getStartX();
             double yDiff = event.getSceneY() - swing.getStartY();
             double hypotenuse = Math.sqrt(yDiff * yDiff + xDiff * xDiff);
 
             circle.setCenterX(swing.getStartX() + swingLen * xDiff / hypotenuse);
             circle.setCenterY(swing.getStartY() + swingLen * yDiff / hypotenuse);
-
-
         });
-
 
         circle.setOnMouseEntered(event -> {
             //change the z-coordinate of the circle
@@ -185,16 +215,12 @@ public class TestingASS extends Application {
             circle.setOpacity(1);
         });
 
-
         //this is vital. Learn more about it
-        circle.setOnDragDetected(event ->{
-                circle.startFullDrag();
+        circle.setOnDragDetected(event -> {
+            circle.startFullDrag();
         });
 
-
-        root.getChildren().addAll(swing,  base, side, longGreen, circle, rectangle);
-
-
+        root.getChildren().addAll(swing, base, side, longGreen, shortGreen, circle, rectangle, shortSwingRectangle);
 
         return root;
     }
@@ -202,30 +228,34 @@ public class TestingASS extends Application {
     //slick way to check shape intersection.
     //.intersect() creates the Shape of the intersection.
     //We check if that shape has actual width (!= -1)
+    public void checkIntersection() {
+        Shape intersectLong = Shape.intersect(circle, rectangle);
+        Shape intersectShort = Shape.intersect(circle, shortSwingRectangle);
 
-    //Let's use this for setOnMouseReleased?
-    public void checkIntersection(){
-        Shape intersect = Shape.intersect(circle, rectangle);
-        if (intersect.getBoundsInLocal().getWidth() != -1) {
+        //check longGreen intersection
+        if (intersectLong.getBoundsInLocal().getWidth() != -1) {
             circle.setCenterX(longGreen.getEndX());
             circle.setCenterY(longGreen.getEndY());
             longGreen.setOpacity(1);
             base.setOpacity(0);
         }
-        else {
+
+        //check shortGreen intersection
+        else if (intersectShort.getBoundsInLocal().getWidth() != -1) {
+            circle.setCenterX(shortGreen.getEndX());
+            circle.setCenterY(shortGreen.getEndY());
+            shortGreen.setOpacity(1);
+            base.setOpacity(0);
+        } else {
             longGreen.setOpacity(0);
             base.setOpacity(1);
         }
     }
 
-
-
-
     public double dist(Line line) {
         return Math.sqrt((line.getEndX() - line.getStartX()) * (line.getEndX() - line.getStartX()) +
                 (line.getEndY() - line.getStartY()) * (line.getEndY() - line.getStartY()));
     }
-
 
     @Override
     public void start(Stage primaryStage) throws Exception {
